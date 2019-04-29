@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // `json:"lat"` means raw string
@@ -89,6 +90,11 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	if containsFilterWords(&p.Message) {
+		fmt.Fprintf(w, "Post contains filtered words\n")
+		return
+	}
+
 	fmt.Fprintf(w, "Post received: %s\n", p.Message)
 
 	id := uuid.New()
@@ -162,11 +168,11 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	// similar to instance of in java
 	for _, item := range searchResult.Each(reflect.TypeOf(typ)) {
 		p := item.(Post) // p = (Post) item
-		fmt.Printf("Post by %s: %s at lat %v and lon %v\n",
+		if !containsFilterWords(&p.Message) {
+			fmt.Printf("Post by %s: %s at lat %v and lon %v\n",
 			p.User, p.Message, p.Location.Lat, p.Location.Lon)
-
-		// TODO(student homework): Perform filtering based on keywords such as web spam etc.
-		ps = append(ps, p)
+			ps = append(ps, p)
+		}
 	}
 
 	js, err := json.Marshal(ps)
@@ -177,4 +183,16 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(js)
+}
+func containsFilterWords(s *string) bool {
+	filteredWords := []string{
+		"fuck",
+		"bitch",
+	}
+	for _, word := range filteredWords {
+		if strings.Contains(*s, word) {
+			return true
+		}
+	}
+	return false
 }
