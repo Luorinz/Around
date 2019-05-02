@@ -38,6 +38,7 @@ const (
 	TYPE        = "post"
 	ES_URL      = "http://35.235.114.72:9200"
 	BUCKET_NAME = "post-images-239021"
+	MAX_RESULT = 1000
 )
 
 var mySigningKey = []byte("secret")
@@ -252,6 +253,7 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 		Index(INDEX).
 		Query(q).
 		Pretty(true).
+		Size(MAX_RESULT).
 		Do()
 	if err != nil {
 		panic(err)
